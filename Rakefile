@@ -2,10 +2,12 @@ require 'rubygems'
 require 'bundler/setup'
 require 'git'
 require 'open3'
+require 'fileutils'
 
 task default: %w[package_concat]
 
 GOPATH = ENV['GOPATH']
+TRAVIS_GOPATH_CACHE = "#{ENV['HOME']}/gocache"
 CONCAT_URL = 'https://github.com/mediachain/concat'
 CONCAT_WORKING_DIR = "#{GOPATH}/src/github.com/mediachain/concat"
 
@@ -41,6 +43,17 @@ def run_cmd(cmd)
   }
 end
 
+def cgo_env
+  if ENV['TRAVIS_OS_NAME'] == 'linux'
+    return '"g++-4.8" CC="gcc-4.8" CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++ -std=c++11 -lrt -Wl,--no-as-needed"'
+  end
+  return ""
+end
+
+def rsync(src, dest)
+  run_cmd("rsync #{src} #{dest}")
+end
+
 task :checkout_concat do
   concat_ref = ENV['concat_ref'] || 'master'
   puts "concat: checking out ref: #{concat_ref}"
@@ -50,19 +63,38 @@ end
 task concat_deps: [:checkout_concat] do
   Dir.chdir(CONCAT_WORKING_DIR) do
     puts "concat: installing dependencies"
-    run_cmd('./setup.sh')
+    run_cmd("env #{cgo_env} ./setup.sh")
   end
 end
 
-task build_concat: [:concat_deps] do
+task build_concat: [:restore_go_cache, :concat_deps] do
   Dir.chdir(CONCAT_WORKING_DIR) do
     puts "concat: building project"
     run_cmd('./install.sh')
   end
 end
 
+task create_go_cache: concat_deps do
+  unless Dir.exist? TRAVIS_GOPATH_CACHE
+    Dir.mkdir TRAVIS_GOPATH_CACHE
+  end
 
-task package_concat: [:build_concat] do
+  puts "copying go cache from #{TRAVIS_GOPATH_CACHE} to #{GOPATH}"
+  rsync("#{GOPATH}/src", "#{TRAVIS_GOPATH_CACHE}/src")
+  rsync("#{GOPATH}/pkg", "#{TRAVIS_GOPATH_CACHE}/pkg")
+end
+
+task :restore_go_cache do
+  unless Dir.exist? TRAVIS_GOPATH_CACHE
+    puts "travis go cache does not exist at #{TRAVIS_GOPATH_CACHE}, skipping cache restore"
+    return
+  end
+
+  rsync("#{TRAVIS_GOPATH_CACHE}/src", "#{GOPATH}/src")
+  rsync("#{TRAVIS_GOPATH_CACHE}/pkg", "#{GOPATH}/pkg")
+end
+
+task package_concat: [:build_concat, :create_go_cache] do
   tarball = "#{Dir.pwd}/concat.tgz"
   Dir.chdir("#{GOPATH}/bin") do
     run_cmd("tar cfz #{tarball} mcnode mcdir")
