@@ -5,6 +5,10 @@ os:
   - linux
   - osx
 
+cache:
+  directories:
+    - $HOME/gocache
+
 install:
   - echo "overriding default travis install phase for golang"
 
