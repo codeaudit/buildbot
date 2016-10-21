@@ -105,7 +105,9 @@ task :restore_go_cache do
     next
   end
 
-  unless Dir.exist? TRAVIS_GOPATH_CACHE
+  unless Dir.exist?(TRAVIS_GOPATH_CACHE) &&
+    Dir.exist?("#{TRAVIS_GOPATH_CACHE}/src") &&
+    Dir.exist?("#{TRAVIS_GOPATH_CACHT}/pkg")
     puts "travis go cache does not exist at #{TRAVIS_GOPATH_CACHE}, skipping cache restore"
     next
   end
