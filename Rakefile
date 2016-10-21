@@ -74,7 +74,11 @@ task build_concat: [:restore_go_cache, :concat_deps] do
   end
 end
 
-task create_go_cache: concat_deps do
+task create_go_cache: [:concat_deps] do
+  if ENV['TRAVIS_OS_NAME'] == nil
+    next
+  end
+
   unless Dir.exist? TRAVIS_GOPATH_CACHE
     Dir.mkdir TRAVIS_GOPATH_CACHE
   end
@@ -85,9 +89,13 @@ task create_go_cache: concat_deps do
 end
 
 task :restore_go_cache do
+  if ENV['TRAVIS_OS_NAME'] == nil
+    next
+  end
+
   unless Dir.exist? TRAVIS_GOPATH_CACHE
     puts "travis go cache does not exist at #{TRAVIS_GOPATH_CACHE}, skipping cache restore"
-    return
+    next
   end
 
   rsync("#{TRAVIS_GOPATH_CACHE}/src", "#{GOPATH}/src")
