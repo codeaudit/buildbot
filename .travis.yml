@@ -1,20 +1,15 @@
 language: go
-
 sudo: required
 dist: trusty
-
-# install g++ 4.8 to build rocksdb
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.8
-      - g++-4.8
 
 cache:
   directories:
     - $HOME/gocache
+
+before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get -qq update
+  - sudo apt-get install gcc-4.8 g++-4.8 -y --force-yes
 
 install:
   - echo "overriding default travis install phase for golang"
