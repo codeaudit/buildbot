@@ -57,7 +57,7 @@ end
 
 def cgo_env
   if travis_os == :linux
-    return '"g++-4.8" CC="gcc-4.8" CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++ -std=c++11 -lrt -Wl,--no-as-needed"'
+    return 'CC="gcc-4.8" CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++ -std=c++11 -lrt -Wl,--no-as-needed"'
   end
   return ""
 end
