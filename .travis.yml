@@ -1,4 +1,8 @@
 language: go
+
+install:
+  - echo "overriding default travis install phase for golang"
+
 script:
   - ruby --version
   - bundle install
