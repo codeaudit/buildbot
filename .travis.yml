@@ -3,6 +3,7 @@ language: go
 sudo: required
 dist: trusty
 
+# install g++ 4.8 to build rocksdb
 addons:
   apt:
     sources:
