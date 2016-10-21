@@ -1,6 +1,9 @@
 sudo: required
 dist: trusty
 language: go
+os:
+  - linux
+  - osx
 
 install:
   - echo "overriding default travis install phase for golang"

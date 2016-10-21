@@ -11,6 +11,18 @@ TRAVIS_GOPATH_CACHE = "#{ENV['HOME']}/gocache"
 CONCAT_URL = 'https://github.com/mediachain/concat'
 CONCAT_WORKING_DIR = "#{GOPATH}/src/github.com/mediachain/concat"
 
+def travis_os
+  name = ENV['TRAVIS_OS_NAME']
+  if name == nil
+    return :not_on_travis
+  end
+  return name.to_sym
+end
+
+def on_travis?
+  return travis_os != :not_on_travis
+end
+
 def checkout_project(origin_url, working_dir, ref_str)
   if Dir.exist?(working_dir)
     g = Git.open(working_dir)
@@ -44,7 +56,7 @@ def run_cmd(cmd)
 end
 
 def cgo_env
-  if ENV['TRAVIS_OS_NAME'] == 'linux'
+  if travis_os == :linux
     return '"g++-4.8" CC="gcc-4.8" CXXFLAGS="-stdlib=libc++" LDFLAGS="-stdlib=libc++ -std=c++11 -lrt -Wl,--no-as-needed"'
   end
   return ""
@@ -75,7 +87,7 @@ task build_concat: [:restore_go_cache, :concat_deps] do
 end
 
 task create_go_cache: [:concat_deps] do
-  if ENV['TRAVIS_OS_NAME'] == nil
+  if !on_travis?
     next
   end
 
@@ -89,7 +101,7 @@ task create_go_cache: [:concat_deps] do
 end
 
 task :restore_go_cache do
-  if ENV['TRAVIS_OS_NAME'] == nil
+  if !on_travis?
     next
   end
 
